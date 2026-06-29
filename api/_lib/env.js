@@ -24,9 +24,20 @@ function hasTavilyApiKey() {
   return Boolean(process.env.TAVILY_API_KEY?.trim());
 }
 
+/** Exchange Rate API 키 — 없으면 open access 엔드포인트 사용 */
+function getExchangeRateApiKey() {
+  return process.env.EXCHANGE_RATE_API_KEY?.trim() || null;
+}
+
+function hasExchangeRateApiKey() {
+  return Boolean(getExchangeRateApiKey());
+}
+
 module.exports = {
   rootDir,
   port: Number(process.env.PORT) || 3000,
   getTavilyApiKey,
   hasTavilyApiKey,
+  getExchangeRateApiKey,
+  hasExchangeRateApiKey,
 };

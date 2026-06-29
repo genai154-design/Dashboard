@@ -3,6 +3,9 @@
   "functions": {
     "api/tavily/search.js": {
       "maxDuration": 30
+    },
+    "api/exchange/rates.js": {
+      "maxDuration": 15
     }
   }
 }

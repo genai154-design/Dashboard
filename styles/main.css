@@ -767,6 +767,66 @@ body::before {
 
 .insight-fx-change--up { color: var(--danger); }
 .insight-fx-change--down { color: var(--info); }
+.insight-fx-change--flat { color: var(--text-muted); }
+
+.insight-card__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.insight-fx-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.insight-fx-refresh:hover {
+  border-color: var(--accent-bright);
+  color: var(--accent-bright);
+}
+
+.insight-card--fx.is-loading .insight-fx-refresh {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.insight-fx-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 8px 0;
+}
+
+.insight-fx-error {
+  font-size: 12px;
+  color: var(--danger);
+  padding: 4px 0;
+}
+
+.insight-fx-error__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.insight-fx-error__hint code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
 
 .insight-fx-note {
   font-size: 10px;

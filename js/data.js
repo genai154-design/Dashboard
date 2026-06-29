@@ -171,16 +171,6 @@ const DEFENSE_DATA = {
         { title: '지휘통신망 고도화 사업', agency: '합참', deadline: 'D-18', amount: '₩520억' },
       ],
     },
-    exchange: {
-      baseDate: '2026-06-29',
-      rates: [
-        { pair: 'USD/KRW', value: '1,382.50', change: '+4.20', direction: 'up' },
-        { pair: 'EUR/KRW', value: '1,498.30', change: '-2.10', direction: 'down' },
-        { pair: 'JPY/KRW', value: '9.42', change: '+0.08', direction: 'up' },
-        { pair: 'GBP/KRW', value: '1,756.80', change: '+1.50', direction: 'up' },
-      ],
-      note: '수출 계약 환율 기준: 전일 종가',
-    },
     aiAnalysis: {
       sentiment: '긍정',
       sentimentScore: 72,

@@ -13,7 +13,7 @@ function escapeHtmlAttr(str) {
 /** 인사이트 카드(뉴스·입찰·환율·AI) 렌더링 */
 function renderInsightCards() {
   const grid = document.getElementById('insight-grid');
-  const { bidding, exchange, aiAnalysis } = DEFENSE_DATA.insightCards;
+  const { bidding, aiAnalysis } = DEFENSE_DATA.insightCards;
 
   grid.innerHTML = `
     <!-- 뉴스 카드 — Tavily 실시간 검색 -->
@@ -92,8 +92,8 @@ function renderInsightCards() {
       </div>
     </article>
 
-    <!-- 환율 카드 -->
-    <article class="insight-card insight-card--fx">
+    <!-- 환율 카드 — Exchange Rate API 실시간 -->
+    <article class="insight-card insight-card--fx" id="fx-insight-card">
       <div class="insight-card__header">
         <div class="insight-card__title-wrap">
           <div class="insight-card__icon insight-card__icon--fx">
@@ -101,19 +101,21 @@ function renderInsightCards() {
           </div>
           <h3 class="insight-card__title">환율</h3>
         </div>
-        <span class="insight-card__badge insight-card__badge--count">${exchange.baseDate}</span>
+        <div class="insight-card__header-actions">
+          <span class="insight-card__badge insight-card__badge--count" id="fx-date-badge">—</span>
+          <button type="button" class="insight-fx-refresh" id="fx-refresh-btn" aria-label="환율 새로고침">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="insight-card__body">
-        ${exchange.rates.map((rate) => `
-          <div class="insight-fx-row">
-            <span class="insight-fx-pair">${rate.pair}</span>
-            <span class="insight-fx-value">${rate.value}</span>
-            <span class="insight-fx-change insight-fx-change--${rate.direction === 'up' ? 'up' : 'down'}">
-              ${rate.direction === 'up' ? '▲' : '▼'} ${rate.change}
-            </span>
-          </div>
-        `).join('')}
-        <p class="insight-fx-note">${exchange.note}</p>
+      <div class="insight-card__body" id="fx-rates-body">
+        <div class="insight-fx-loading">
+          <div class="insight-news-loading__spinner" aria-hidden="true"></div>
+          <span>환율 불러오는 중…</span>
+        </div>
+      </div>
+      <div class="insight-card__footer">
+        <span class="insight-card__source">ExchangeRate-API</span>
       </div>
     </article>
 
@@ -290,6 +292,7 @@ function initRefresh() {
       renderKPIs(select.value);
       renderInsightCards();
       initNewsSearch();
+      initExchangeRates();
       updateTimestamp();
       resizeCharts();
       btn.classList.remove('spinning');
@@ -305,6 +308,7 @@ function initDashboard() {
   renderKPIs(year);
   renderInsightCards();
   initNewsSearch();
+  initExchangeRates();
   renderRegions();
   renderTechnologies();
   updateTimestamp();

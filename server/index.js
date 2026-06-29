@@ -5,8 +5,9 @@
  */
 const express = require('express');
 const path = require('path');
-const { rootDir, port, hasTavilyApiKey } = require('../api/_lib/env');
+const { rootDir, port, hasTavilyApiKey, hasExchangeRateApiKey } = require('../api/_lib/env');
 const tavilyRouter = require('./routes/tavily');
+const exchangeRouter = require('./routes/exchange');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/tavily', tavilyRouter);
+app.use('/api/exchange', exchangeRouter);
 
 // dotfiles(.env 등) 정적 제공 금지
 app.use(
@@ -48,7 +50,12 @@ app.listen(port, () => {
       '  [경고] TAVILY_API_KEY 미설정 — .env.example을 참고하여 .env를 만드세요.'
     );
   } else {
-    console.log('  Tavily API: POST /api/tavily/search (로컬 Express 프록시)');
-    console.log('  Vercel 배포: api/tavily/search.js Serverless Function');
+    console.log('  Tavily API: POST /api/tavily/search');
+  }
+
+  if (hasExchangeRateApiKey()) {
+    console.log('  Exchange Rate API: GET /api/exchange/rates (키 사용 · 전일 대비)');
+  } else {
+    console.log('  Exchange Rate API: GET /api/exchange/rates (Open Access · 키 선택)');
   }
 });
