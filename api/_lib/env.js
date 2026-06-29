@@ -76,6 +76,89 @@ function getGeminiModel() {
   return model || DEFAULT_GEMINI_MODEL;
 }
 
+/** 카카오 REST API 키 (OAuth client_id) */
+function getKakaoRestApiKey() {
+  const key = process.env.KAKAO_REST_API_KEY?.trim();
+  if (!key) {
+    throw new Error(
+      'KAKAO_REST_API_KEY가 설정되지 않았습니다. .env 또는 Vercel 환경 변수를 확인하세요.'
+    );
+  }
+  return key;
+}
+
+/** 카카오 Client Secret — 토큰 발급 시 필요 (콘솔 [보안] 탭) */
+function getKakaoClientSecret() {
+  const secret = process.env.KAKAO_CLIENT_SECRET?.trim();
+  if (!secret) {
+    throw new Error(
+      'KAKAO_CLIENT_SECRET이 설정되지 않았습니다. .env 또는 Vercel 환경 변수를 확인하세요.'
+    );
+  }
+  return secret;
+}
+
+/** Vercel·production 여부 — Redirect URI 선택용 */
+function isProductionRuntime() {
+  if (process.env.APP_ENV?.trim() === 'production') return true;
+  if (process.env.APP_ENV?.trim() === 'local') return false;
+  return process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+}
+
+/**
+ * OAuth Redirect URI — KAKAO_REDIRECT_URI 우선, 없으면 로컬/배포 자동 선택
+ */
+function getKakaoRedirectUri() {
+  const explicit = process.env.KAKAO_REDIRECT_URI?.trim();
+  if (explicit) return explicit;
+
+  const local = process.env.KAKAO_REDIRECT_URI_LOCAL?.trim();
+  const production = process.env.KAKAO_REDIRECT_URI_PRODUCTION?.trim();
+
+  if (isProductionRuntime()) {
+    if (!production) {
+      throw new Error(
+        'KAKAO_REDIRECT_URI_PRODUCTION이 설정되지 않았습니다. 배포 환경 Redirect URI를 .env에 추가하세요.'
+      );
+    }
+    return production;
+  }
+
+  if (!local) {
+    throw new Error(
+      'KAKAO_REDIRECT_URI_LOCAL이 설정되지 않았습니다. 로컬 Redirect URI를 .env에 추가하세요.'
+    );
+  }
+  return local;
+}
+
+function hasKakaoCredentials() {
+  return Boolean(
+    process.env.KAKAO_REST_API_KEY?.trim() &&
+      process.env.KAKAO_CLIENT_SECRET?.trim()
+  );
+}
+
+function hasKakaoRedirectUris() {
+  const explicit = process.env.KAKAO_REDIRECT_URI?.trim();
+  if (explicit) return true;
+  const local = process.env.KAKAO_REDIRECT_URI_LOCAL?.trim();
+  const production = process.env.KAKAO_REDIRECT_URI_PRODUCTION?.trim();
+  return Boolean(local && production);
+}
+
+/** 대시보드 Origin — 카카오 메시지 링크·OAuth 복귀용 */
+function getAppOrigin() {
+  const explicit = process.env.APP_ORIGIN?.trim();
+  if (explicit) return explicit.replace(/\/$/, '');
+
+  try {
+    return new URL(getKakaoRedirectUri()).origin;
+  } catch {
+    return `http://localhost:${Number(process.env.PORT) || 3000}`;
+  }
+}
+
 module.exports = {
   rootDir,
   port: Number(process.env.PORT) || 3000,
@@ -89,4 +172,11 @@ module.exports = {
   hasGeminiApiKey,
   getGeminiModel,
   DEFAULT_GEMINI_MODEL,
+  getKakaoRestApiKey,
+  getKakaoClientSecret,
+  getKakaoRedirectUri,
+  hasKakaoCredentials,
+  hasKakaoRedirectUris,
+  isProductionRuntime,
+  getAppOrigin,
 };

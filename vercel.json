@@ -12,6 +12,12 @@
     },
     "api/gemini/analyze.js": {
       "maxDuration": 30
+    },
+    "api/kakao/callback.js": {
+      "maxDuration": 15
+    },
+    "api/kakao/send.js": {
+      "maxDuration": 15
     }
   }
 }

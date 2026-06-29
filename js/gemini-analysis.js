@@ -6,6 +6,13 @@
 let analysisDebounceTimer = null;
 let analysisInFlight = false;
 let geminiDocumentEventsBound = false;
+let lastAiAnalysis = null;
+
+function getLastAiAnalysis() {
+  return lastAiAnalysis;
+}
+
+window.getLastAiAnalysis = getLastAiAnalysis;
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -67,6 +74,11 @@ function setAiCardState(state, message = '') {
 
   if (card) card.classList.toggle('is-loading', state === 'loading');
 
+  const kakaoBtn = document.getElementById('ai-kakao-send-btn');
+  if (kakaoBtn) {
+    kakaoBtn.disabled = state === 'loading' || state === 'waiting' || state === 'error' || !lastAiAnalysis;
+  }
+
   if (!body) return;
 
   if (state === 'loading') {
@@ -97,10 +109,12 @@ function setAiCardState(state, message = '') {
       </div>
     `;
     if (badge) badge.textContent = '오류';
+    lastAiAnalysis = null;
   }
 }
 
 function renderAiAnalysis(data) {
+  lastAiAnalysis = data;
   const body = document.getElementById('ai-analysis-body');
   const badge = document.getElementById('ai-status-badge');
   const updated = document.getElementById('ai-updated-at');
@@ -144,6 +158,9 @@ function renderAiAnalysis(data) {
   if (modelLabel && data.model) {
     modelLabel.textContent = data.model;
   }
+
+  const kakaoBtn = document.getElementById('ai-kakao-send-btn');
+  if (kakaoBtn) kakaoBtn.disabled = false;
 }
 
 async function runGeminiAnalysis() {

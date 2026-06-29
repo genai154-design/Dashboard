@@ -5,11 +5,12 @@
  */
 const express = require('express');
 const path = require('path');
-const { rootDir, port, hasTavilyApiKey, hasExchangeRateApiKey, hasNaverCredentials, hasGeminiApiKey, getGeminiModel } = require('../api/_lib/env');
+const { rootDir, port, hasTavilyApiKey, hasExchangeRateApiKey, hasNaverCredentials, hasGeminiApiKey, getGeminiModel, hasKakaoCredentials } = require('../api/_lib/env');
 const tavilyRouter = require('./routes/tavily');
 const exchangeRouter = require('./routes/exchange');
 const naverRouter = require('./routes/naver');
 const geminiRouter = require('./routes/gemini');
+const kakaoRouter = require('./routes/kakao');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/tavily', tavilyRouter);
 app.use('/api/exchange', exchangeRouter);
 app.use('/api/naver', naverRouter);
 app.use('/api/gemini', geminiRouter);
+app.use('/api/kakao', kakaoRouter);
 
 // dotfiles(.env 등) 정적 제공 금지
 app.use(
@@ -75,5 +77,11 @@ app.listen(port, () => {
     console.log(`  Gemini API: POST /api/gemini/analyze (${getGeminiModel()})`);
   } else {
     console.warn('  [경고] GEMINI_API_KEY 미설정 — AI 분석 불가');
+  }
+
+  if (hasKakaoCredentials()) {
+    console.log('  Kakao API: GET /api/kakao/login · POST /api/kakao/send');
+  } else {
+    console.warn('  [경고] KAKAO_REST_API_KEY / KAKAO_CLIENT_SECRET 미설정 — 카카오톡 전송 불가');
   }
 });

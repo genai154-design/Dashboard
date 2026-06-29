@@ -186,9 +186,24 @@ function renderInsightCards() {
           <span>뉴스 검색 후 AI 분석을 시작합니다…</span>
         </div>
       </div>
-      <div class="insight-card__footer">
-        <span class="insight-ai-updated" id="ai-updated-at">분석 대기 중</span>
-        <span class="insight-card__source" id="ai-model-label">Gemini</span>
+      <div class="insight-card__footer insight-card__footer--ai">
+        <div class="insight-ai-footer-left">
+          <span class="insight-ai-updated" id="ai-updated-at">분석 대기 중</span>
+          <span class="insight-kakao-status" id="ai-kakao-status" aria-live="polite"></span>
+        </div>
+        <div class="insight-ai-footer-actions">
+          <button
+            type="button"
+            class="insight-kakao-send"
+            id="ai-kakao-send-btn"
+            disabled
+            aria-label="카카오톡으로 분석 결과 보내기"
+          >
+            <span class="insight-kakao-send__icon" aria-hidden="true">💬</span>
+            카카오톡
+          </button>
+          <span class="insight-card__source" id="ai-model-label">Gemini</span>
+        </div>
       </div>
     </article>
   `;
@@ -339,6 +354,7 @@ function initRefresh() {
       initNewsSearch();
       initExchangeRates();
       initGeminiAnalysis();
+      initKakaoSend();
       updateTimestamp();
       resizeCharts();
       btn.classList.remove('spinning');
@@ -356,6 +372,7 @@ function initDashboard() {
   initNewsSearch();
   initExchangeRates();
   initGeminiAnalysis();
+  initKakaoSend();
   renderRegions();
   renderTechnologies();
   updateTimestamp();

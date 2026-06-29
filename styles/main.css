@@ -1107,6 +1107,84 @@ body::before {
   pointer-events: none;
 }
 
+.insight-card__footer--ai {
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.insight-ai-footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.insight-ai-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.insight-kakao-send {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: #fee500;
+  color: #191919;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.insight-kakao-send:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.insight-kakao-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.insight-kakao-send.is-sending {
+  opacity: 0.7;
+}
+
+.insight-kakao-send__icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.insight-kakao-status {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.insight-kakao-status--success {
+  color: var(--accent-bright);
+}
+
+.insight-kakao-status--error {
+  color: var(--danger);
+}
+
+.insight-kakao-status--info {
+  color: var(--text-secondary);
+}
+
+.insight-card.is-kakao-sending .insight-kakao-send {
+  pointer-events: none;
+}
+
 .insight-ai-summary {
   font-size: 12px;
   color: var(--text-secondary);
