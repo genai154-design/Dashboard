@@ -4,6 +4,20 @@
  */
 const TARGET_CURRENCIES = ['EUR', 'JPY', 'GBP'];
 
+// 키ed API 실패 시 Open Access로 대체 가능한 오류
+const FALLBACK_ERROR_TYPES = new Set([
+  'inactive-account',
+  'invalid-key',
+  'quota-reached',
+]);
+
+const ERROR_MESSAGES = {
+  'inactive-account':
+    'ExchangeRate-API 계정이 비활성입니다. 가입 시 이메일 인증을 완료하거나, .env의 EXCHANGE_RATE_API_KEY를 제거해 Open Access를 사용하세요.',
+  'invalid-key': 'Exchange Rate API 키가 올바르지 않습니다. .env의 EXCHANGE_RATE_API_KEY를 확인하세요.',
+  'quota-reached': 'Exchange Rate API 월간 할당량을 초과했습니다. Open Access로 대체 조회합니다.',
+};
+
 /** API 키 유무에 따라 URL·인증 헤더 결정 */
 function getLatestRequest(apiKey) {
   if (apiKey) {
@@ -12,7 +26,6 @@ function getLatestRequest(apiKey) {
       headers: { Authorization: `Bearer ${apiKey}` },
     };
   }
-  // 키 없을 때 open access (일일 갱신, 전일 대비 미제공)
   return {
     url: 'https://open.er-api.com/v6/latest/USD',
     headers: {},
@@ -28,12 +41,23 @@ function getHistoricalRequest(apiKey, year, month, day) {
   };
 }
 
-/** API 응답에서 rates 객체 추출 (v6 / open access 필드명 통일) */
+function mapApiError(errorType) {
+  return ERROR_MESSAGES[errorType] || errorType || 'Exchange Rate API 오류';
+}
+
+/** API 응답에서 rates 객체 추출 — HTTP 200이어도 result:error 인 경우 처리 */
 function extractRates(data) {
-  if (data.result && data.result !== 'success') {
-    throw new Error(data['error-type'] || data.error || 'Exchange Rate API 오류');
+  if (data.result === 'error' || (data.result && data.result !== 'success')) {
+    const errorType = data['error-type'] || data.error || 'unknown';
+    const err = new Error(mapApiError(errorType));
+    err.errorType = errorType;
+    throw err;
   }
-  return data.conversion_rates || data.rates;
+  const rates = data.conversion_rates || data.rates;
+  if (!rates) {
+    throw new Error('환율 데이터 형식이 올바르지 않습니다.');
+  }
+  return rates;
 }
 
 /** USD 기준 rates → 원화 환율 페어 계산 */
@@ -41,9 +65,7 @@ function toKrwPairs(rates) {
   const krwPerUsd = rates.KRW;
   if (!krwPerUsd) throw new Error('KRW 환율 데이터를 찾을 수 없습니다.');
 
-  const pairs = [
-    { pair: 'USD/KRW', value: krwPerUsd },
-  ];
+  const pairs = [{ pair: 'USD/KRW', value: krwPerUsd }];
 
   for (const code of TARGET_CURRENCIES) {
     const perUsd = rates[code];
@@ -81,11 +103,36 @@ async function fetchRatesFromApi(url, headers) {
   const response = await fetch(url, { headers });
   const data = await response.json().catch(() => ({}));
 
-  if (!response.ok) {
-    throw new Error(data['error-type'] || data.error || `Exchange Rate API (${response.status})`);
+  // ExchangeRate-API는 오류도 200 + result:error 로 반환하는 경우가 있음
+  if (!response.ok && data.result !== 'error') {
+    const errorType = data['error-type'] || data.error;
+    const err = new Error(mapApiError(errorType));
+    err.errorType = errorType;
+    throw err;
   }
 
   return extractRates(data);
+}
+
+/** 최신 환율 — 키 오류 시 Open Access 자동 대체 */
+async function fetchLatestRates(apiKey) {
+  if (!apiKey) {
+    const open = getLatestRequest(null);
+    const rates = await fetchRatesFromApi(open.url, open.headers);
+    return { rates, usedFallback: false, keyed: false };
+  }
+
+  const keyed = getLatestRequest(apiKey);
+  try {
+    const rates = await fetchRatesFromApi(keyed.url, keyed.headers);
+    return { rates, usedFallback: false, keyed: true };
+  } catch (err) {
+    if (!FALLBACK_ERROR_TYPES.has(err.errorType)) throw err;
+
+    const open = getLatestRequest(null);
+    const rates = await fetchRatesFromApi(open.url, open.headers);
+    return { rates, usedFallback: true, keyed: false, fallbackReason: err.errorType };
+  }
 }
 
 /**
@@ -95,17 +142,16 @@ async function fetchRatesFromApi(url, headers) {
 async function handleExchangeRates(getApiKey) {
   try {
     const apiKey = getApiKey()?.trim() || null;
-    const { url, headers } = getLatestRequest(apiKey);
-    const latestRates = await fetchRatesFromApi(url, headers);
+    const { rates: latestRates, usedFallback, keyed, fallbackReason } = await fetchLatestRates(apiKey);
 
     let previousRates = null;
-    if (apiKey) {
+    // 전일 대비는 유효한 키로 keyed API 성공했을 때만
+    if (keyed && apiKey) {
       const { year, month, day } = getYesterdayUtc();
       const hist = getHistoricalRequest(apiKey, year, month, day);
       try {
         previousRates = await fetchRatesFromApi(hist.url, hist.headers);
       } catch {
-        // 전일 데이터 실패 시 등락만 생략
         previousRates = null;
       }
     }
@@ -124,23 +170,27 @@ async function handleExchangeRates(getApiKey) {
       };
     });
 
-    const updatedUtc = new Date().toISOString().slice(0, 10);
+    let note = 'ExchangeRate-API Open Access · 일 1회 갱신';
+    if (keyed) {
+      note = 'ExchangeRate-API 실시간 · 전일 대비';
+    } else if (usedFallback && fallbackReason === 'inactive-account') {
+      note = 'Open Access (계정 비활성 — 이메일 인증 후 키 사용 가능)';
+    } else if (usedFallback) {
+      note = `Open Access (${fallbackReason} — 키 API 대체)`;
+    }
 
     return {
       status: 200,
       data: {
-        baseDate: updatedUtc,
+        baseDate: new Date().toISOString().slice(0, 10),
         rates,
-        note: apiKey
-          ? 'ExchangeRate-API 실시간 · 전일 대비'
-          : 'ExchangeRate-API Open Access · 일 1회 갱신',
+        note,
         source: 'ExchangeRate-API',
+        fallback: usedFallback,
       },
     };
   } catch (err) {
-    const message = err.message || '환율 조회 실패';
-    const status = message.includes('API_KEY') ? 503 : 500;
-    return { status, data: { error: message } };
+    return { status: 500, data: { error: err.message || '환율 조회 실패' } };
   }
 }
 
