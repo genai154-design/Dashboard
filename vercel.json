@@ -11,7 +11,8 @@
       "maxDuration": 15
     },
     "api/gemini/analyze.js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "prompt/**"
     },
     "api/kakao/callback.js": {
       "maxDuration": 15

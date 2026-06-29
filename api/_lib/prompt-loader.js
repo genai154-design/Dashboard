@@ -1,20 +1,31 @@
 /**
  * prompt/ 폴더의 마크다운 프롬프트 템플릿 로더
- * — 프롬프트 수정 시 서버 재시작으로 반영 (메모리 캐시)
+ * — 로컬: 프로젝트 루트 prompt/
+ * — Vercel: includeFiles + api/_lib/prompts/ fallback
  */
 const fs = require('fs');
 const path = require('path');
 const { rootDir } = require('./env');
 
 const DEFAULT_PROMPT_DIR = 'prompt';
+const BUNDLED_PROMPT_DIR = path.join(__dirname, 'prompts');
+const NEWS_ANALYSIS_PROMPT_FILE = 'news-analysis.md';
 const templateCache = new Map();
 
-/** prompt/ 디렉터리 절대 경로 */
-function getPromptDir() {
+/** 프롬프트 파일 후보 경로 (우선순위 순) */
+function getPromptCandidatePaths(filename) {
+  const candidates = [];
+
   const customDir = process.env.PROMPT_DIR?.trim();
-  return customDir
-    ? path.resolve(rootDir, customDir)
-    : path.join(rootDir, DEFAULT_PROMPT_DIR);
+  if (customDir) {
+    candidates.push(path.resolve(rootDir, customDir, filename));
+  }
+
+  candidates.push(path.join(rootDir, DEFAULT_PROMPT_DIR, filename));
+  candidates.push(path.join(BUNDLED_PROMPT_DIR, filename));
+  candidates.push(path.join(process.cwd(), DEFAULT_PROMPT_DIR, filename));
+
+  return candidates;
 }
 
 /**
@@ -27,10 +38,13 @@ function loadPromptTemplate(filename) {
     return templateCache.get(cacheKey);
   }
 
-  const filePath = path.join(getPromptDir(), filename);
-  if (!fs.existsSync(filePath)) {
+  const candidates = getPromptCandidatePaths(filename);
+  const filePath = candidates.find((p) => fs.existsSync(p));
+
+  if (!filePath) {
     throw new Error(
-      `프롬프트 파일을 찾을 수 없습니다: ${path.relative(rootDir, filePath)}`
+      `프롬프트 파일을 찾을 수 없습니다: ${DEFAULT_PROMPT_DIR}/${filename}\n` +
+        `시도한 경로:\n${candidates.map((p) => `  - ${p}`).join('\n')}`
     );
   }
 
@@ -41,8 +55,6 @@ function loadPromptTemplate(filename) {
 
 /**
  * {{변수명}} 플레이스홀더 치환
- * @param {string} template
- * @param {Record<string, string>} variables
  */
 function renderPromptTemplate(template, variables = {}) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
@@ -52,19 +64,19 @@ function renderPromptTemplate(template, variables = {}) {
   });
 }
 
-/**
- * 프롬프트 파일 로드 + 변수 치환
- * @param {string} filename
- * @param {Record<string, string>} variables
- */
 function buildPromptFromFile(filename, variables) {
   const template = loadPromptTemplate(filename);
   return renderPromptTemplate(template, variables);
 }
 
-/** 개발 중 프롬프트 파일 변경 시 캐시 초기화 */
 function clearPromptCache() {
   templateCache.clear();
+}
+
+function getPromptDir() {
+  const candidates = getPromptCandidatePaths(NEWS_ANALYSIS_PROMPT_FILE);
+  const found = candidates.find((p) => fs.existsSync(p));
+  return found ? path.dirname(found) : path.join(rootDir, DEFAULT_PROMPT_DIR);
 }
 
 module.exports = {
@@ -73,5 +85,6 @@ module.exports = {
   buildPromptFromFile,
   clearPromptCache,
   getPromptDir,
-  NEWS_ANALYSIS_PROMPT_FILE: 'news-analysis.md',
+  getPromptCandidatePaths,
+  NEWS_ANALYSIS_PROMPT_FILE,
 };

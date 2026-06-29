@@ -105,7 +105,7 @@ function setAiCardState(state, message = '') {
     body.innerHTML = `
       <div class="insight-ai-error">
         <p>${escapeHtml(message)}</p>
-        <p class="insight-ai-error__hint">GEMINI_API_KEY · <code>npm start</code> 확인</p>
+        <p class="insight-ai-error__hint">npm start로 서버 실행 · prompt/news-analysis.md · GEMINI_API_KEY 확인</p>
       </div>
     `;
     if (badge) badge.textContent = '오류';
