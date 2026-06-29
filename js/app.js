@@ -16,48 +16,93 @@ function renderInsightCards() {
   const { bidding, aiAnalysis } = DEFENSE_DATA.insightCards;
 
   grid.innerHTML = `
-    <!-- 뉴스 카드 — Tavily 실시간 검색 -->
-    <article class="insight-card insight-card--news" id="news-insight-card">
-      <div class="insight-card__header">
+    <!-- 뉴스 검색 — 국외(Tavily) · 국내(Naver) 이중 패널 -->
+    <article class="insight-card insight-card--news-dual news-dual-card" id="news-dual-card">
+      <div class="insight-card__header news-dual-card__header">
         <div class="insight-card__title-wrap">
           <div class="insight-card__icon insight-card__icon--news">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/></svg>
           </div>
-          <h3 class="insight-card__title">뉴스</h3>
+          <div>
+            <h3 class="insight-card__title">뉴스 검색</h3>
+            <p class="news-dual-card__subtitle">국외 · 국내 실시간 검색</p>
+          </div>
         </div>
-        <span class="insight-card__badge insight-card__badge--count" id="news-count-badge">—</span>
-      </div>
-
-      <form class="insight-news-search" id="news-search-form" aria-label="방산 뉴스 검색">
-        <input
-          type="search"
-          id="news-search-input"
-          class="insight-news-search__input"
-          placeholder="방산 뉴스 검색…"
-          autocomplete="off"
-          aria-label="뉴스 검색어"
-        />
-        <button type="submit" class="insight-news-search__btn" aria-label="검색">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        </button>
-      </form>
-
-      <div class="insight-news-chips" role="group" aria-label="빠른 검색">
-        ${(DEFENSE_DATA.tavilyNews?.quickTopics || []).map((t) => `
-          <button type="button" class="insight-news-chip" data-news-query="${escapeHtmlAttr(t.query)}">${t.label}</button>
-        `).join('')}
-      </div>
-
-      <div class="insight-card__body" id="news-search-results">
-        <div class="insight-news-loading">
-          <div class="insight-news-loading__spinner" aria-hidden="true"></div>
-          <span>뉴스 불러오는 중…</span>
-        </div>
-      </div>
-
-      <div class="insight-card__footer">
         <a href="#news" class="insight-card__link">전체 뉴스 보기 →</a>
-        <span class="insight-card__source">Tavily</span>
+      </div>
+
+      <div class="news-dual-grid">
+        <!-- 좌측: Tavily 국외 뉴스 -->
+        <section class="news-panel news-panel--global" id="tavily-panel">
+          <div class="news-panel__head">
+            <span class="news-panel__badge">🌍 국외</span>
+            <span class="news-panel__source">Tavily</span>
+            <span class="news-panel__count" id="tavily-count-badge">—</span>
+          </div>
+
+          <form class="insight-news-search" id="tavily-search-form" aria-label="국외 방산 뉴스 검색">
+            <input
+              type="search"
+              id="tavily-search-input"
+              class="insight-news-search__input"
+              placeholder="Global defense news…"
+              autocomplete="off"
+              aria-label="국외 뉴스 검색어"
+            />
+            <button type="submit" class="insight-news-search__btn" aria-label="국외 뉴스 검색">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </button>
+          </form>
+
+          <div class="insight-news-chips" role="group" aria-label="국외 빠른 검색">
+            ${(DEFENSE_DATA.tavilyNews?.quickTopics || []).map((t) => `
+              <button type="button" class="insight-news-chip" data-tavily-query="${escapeHtmlAttr(t.query)}">${t.label}</button>
+            `).join('')}
+          </div>
+
+          <div class="news-panel__body" id="tavily-search-results">
+            <div class="insight-news-loading">
+              <div class="insight-news-loading__spinner" aria-hidden="true"></div>
+              <span>국외 뉴스 불러오는 중…</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 우측: Naver 국내 뉴스 -->
+        <section class="news-panel news-panel--domestic" id="naver-panel">
+          <div class="news-panel__head">
+            <span class="news-panel__badge news-panel__badge--naver">🇰🇷 국내</span>
+            <span class="news-panel__source news-panel__source--naver">Naver</span>
+            <span class="news-panel__count news-panel__count--naver" id="naver-count-badge">—</span>
+          </div>
+
+          <form class="insight-news-search insight-news-search--naver" id="naver-search-form" aria-label="국내 방산 뉴스 검색">
+            <input
+              type="search"
+              id="naver-search-input"
+              class="insight-news-search__input insight-news-search__input--naver"
+              placeholder="방산·국방 뉴스 검색…"
+              autocomplete="off"
+              aria-label="국내 뉴스 검색어"
+            />
+            <button type="submit" class="insight-news-search__btn insight-news-search__btn--naver" aria-label="국내 뉴스 검색">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </button>
+          </form>
+
+          <div class="insight-news-chips" role="group" aria-label="국내 빠른 검색">
+            ${(DEFENSE_DATA.naverNews?.quickTopics || []).map((t) => `
+              <button type="button" class="insight-news-chip insight-news-chip--naver" data-naver-query="${escapeHtmlAttr(t.query)}">${t.label}</button>
+            `).join('')}
+          </div>
+
+          <div class="news-panel__body" id="naver-search-results">
+            <div class="insight-news-loading">
+              <div class="insight-news-loading__spinner insight-news-loading__spinner--naver" aria-hidden="true"></div>
+              <span>국내 뉴스 불러오는 중…</span>
+            </div>
+          </div>
+        </section>
       </div>
     </article>
 

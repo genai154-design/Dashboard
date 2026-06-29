@@ -12,8 +12,10 @@
   <script src="js/data.js" defer></script>
   <script src="js/charts.js" defer></script>
   <script src="js/api/tavily.js" defer></script>
+  <script src="js/api/naver.js" defer></script>
   <script src="js/api/exchange.js" defer></script>
   <script src="js/news-tavily.js" defer></script>
+  <script src="js/news-naver.js" defer></script>
   <script src="js/exchange-rates.js" defer></script>
   <script src="js/app.js" defer></script>
 </head>
@@ -163,10 +165,29 @@
       <div class="tech-grid" id="tech-grid"></div>
     </section>
 
-    <!-- 뉴스 & 이슈 -->
+    <!-- 뉴스 & 이슈 — 국외/국내 2열 -->
     <section id="news" class="section">
       <h2 class="section-title">최신 뉴스 &amp; 이슈</h2>
-      <div class="news-list" id="news-list"></div>
+      <div class="news-dual-full">
+        <div class="news-full-column">
+          <div class="news-full-column__head news-full-column__head--global">
+            <span class="news-full-column__badge">🌍 국외 뉴스</span>
+            <span class="news-full-column__source">Tavily</span>
+          </div>
+          <div class="news-list" id="news-list-global">
+            <p class="news-empty news-empty--inline">국외 뉴스를 불러오는 중…</p>
+          </div>
+        </div>
+        <div class="news-full-column">
+          <div class="news-full-column__head news-full-column__head--domestic">
+            <span class="news-full-column__badge">🇰🇷 국내 뉴스</span>
+            <span class="news-full-column__source">Naver</span>
+          </div>
+          <div class="news-list" id="news-list-domestic">
+            <p class="news-empty news-empty--inline">국내 뉴스를 불러오는 중…</p>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
   </div>

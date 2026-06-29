@@ -6,6 +6,9 @@
     },
     "api/exchange/rates.js": {
       "maxDuration": 15
+    },
+    "api/naver/search.js": {
+      "maxDuration": 15
     }
   }
 }

@@ -145,18 +145,29 @@ const DEFENSE_DATA = {
     },
   ],
 
-  // Tavily 뉴스 검색 설정 — API 키는 서버(.env)에만 존재
+  // Tavily 국외 뉴스 검색 설정
   tavilyNews: {
-    defaultQuery: '한국 방산 K-defense industry news',
+    defaultQuery: 'global defense industry news 2026',
     quickTopics: [
-      { label: 'K-방산', query: 'K-방산 수출 defense export Korea' },
       { label: 'NATO', query: 'NATO defense spending budget 2026' },
-      { label: '무인체계', query: 'military drones UAV defense systems' },
-      { label: '방산 M&A', query: 'defense industry merger acquisition' },
+      { label: 'Ukraine', query: 'Ukraine defense weapons military aid' },
+      { label: 'Drones', query: 'military drones UAV defense systems' },
+      { label: 'M&A', query: 'defense industry merger acquisition' },
     ],
   },
 
-  // 인사이트 카드용 요약 데이터 (뉴스는 Tavily 실시간 검색으로 대체)
+  // Naver 국내 뉴스 검색 설정
+  naverNews: {
+    defaultQuery: '방산 K방산 국방',
+    quickTopics: [
+      { label: 'K-방산', query: 'K방산 수출' },
+      { label: '방위사업', query: '방위사업청' },
+      { label: 'KF-21', query: 'KF-21' },
+      { label: 'LIG', query: 'LIG넥스원' },
+    ],
+  },
+
+  // 인사이트 카드용 요약 데이터 (뉴스는 Tavily·Naver 실시간 검색으로 대체)
   insightCards: {
     news: {
       todayCount: 0,

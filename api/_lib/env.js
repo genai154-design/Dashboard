@@ -33,6 +33,26 @@ function hasExchangeRateApiKey() {
   return Boolean(getExchangeRateApiKey());
 }
 
+/** 네이버 검색 API 자격 증명 */
+function getNaverCredentials() {
+  const clientId = process.env.NAVER_CLIENT_ID?.trim();
+  const clientSecret = process.env.NAVER_CLIENT_SECRET?.trim();
+
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      'NAVER_CLIENT_ID / NAVER_CLIENT_SECRET이 설정되지 않았습니다. .env 또는 Vercel 환경 변수를 확인하세요.'
+    );
+  }
+
+  return { clientId, clientSecret };
+}
+
+function hasNaverCredentials() {
+  return Boolean(
+    process.env.NAVER_CLIENT_ID?.trim() && process.env.NAVER_CLIENT_SECRET?.trim()
+  );
+}
+
 module.exports = {
   rootDir,
   port: Number(process.env.PORT) || 3000,
@@ -40,4 +60,6 @@ module.exports = {
   hasTavilyApiKey,
   getExchangeRateApiKey,
   hasExchangeRateApiKey,
+  getNaverCredentials,
+  hasNaverCredentials,
 };

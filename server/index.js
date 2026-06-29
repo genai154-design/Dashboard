@@ -5,9 +5,10 @@
  */
 const express = require('express');
 const path = require('path');
-const { rootDir, port, hasTavilyApiKey, hasExchangeRateApiKey } = require('../api/_lib/env');
+const { rootDir, port, hasTavilyApiKey, hasExchangeRateApiKey, hasNaverCredentials } = require('../api/_lib/env');
 const tavilyRouter = require('./routes/tavily');
 const exchangeRouter = require('./routes/exchange');
+const naverRouter = require('./routes/naver');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use((req, res, next) => {
 
 app.use('/api/tavily', tavilyRouter);
 app.use('/api/exchange', exchangeRouter);
+app.use('/api/naver', naverRouter);
 
 // dotfiles(.env 등) 정적 제공 금지
 app.use(
@@ -57,5 +59,13 @@ app.listen(port, () => {
     console.log('  Exchange Rate API: GET /api/exchange/rates (키 사용 · 전일 대비)');
   } else {
     console.log('  Exchange Rate API: GET /api/exchange/rates (Open Access · 키 선택)');
+  }
+
+  if (hasNaverCredentials()) {
+    console.log('  Naver News API: POST /api/naver/search');
+  } else {
+    console.warn(
+      '  [경고] NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 미설정 — 국내 뉴스 검색 불가'
+    );
   }
 });
