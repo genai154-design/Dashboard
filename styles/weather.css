@@ -34,7 +34,10 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   min-height: 100vh;
+  min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* 하늘 그라데이션 배경 */
@@ -764,7 +767,7 @@ body::before {
 
 @media (max-width: 600px) {
   .weather-app {
-    padding: 20px 16px 32px;
+    padding: 16px 14px calc(32px + env(safe-area-inset-bottom, 0px));
   }
 
   .auto-refresh-bar__inner {

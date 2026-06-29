@@ -269,17 +269,20 @@ function renderTechnologies() {
   `).join('');
 }
 
-/** 마지막 업데이트 시각 표시 */
+/** 마지막 업데이트 시각 표시 — 데스크톱·모바일 동시 갱신 */
 function updateTimestamp() {
-  const el = document.getElementById('last-updated');
-  const now = new Date();
-  el.textContent = now.toLocaleString('ko-KR', {
+  const formatted = new Date().toLocaleString('ko-KR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
   });
+
+  const desktop = document.getElementById('last-updated');
+  const mobile = document.getElementById('last-updated-mobile');
+  if (desktop) desktop.textContent = formatted;
+  if (mobile) mobile.textContent = formatted;
 }
 
 /** 사이드바 네비게이션 — 스크롤 위치에 따라 active 상태 갱신 */
@@ -290,7 +293,9 @@ function initNavigation() {
   );
 
   function onScroll() {
-    const scrollY = window.scrollY + 120;
+    // 모바일 하단 네비 높이를 반영해 섹션 활성화 오프셋 조정
+    const navOffset = window.innerWidth <= 768 ? 80 : 120;
+    const scrollY = window.scrollY + navOffset;
 
     sections.forEach((section, i) => {
       if (!section) return;
@@ -361,6 +366,11 @@ function initDashboard() {
   initNavigation();
   initYearFilter();
   initRefresh();
+
+  // 화면 회전·리사이즈 시 차트 레이아웃 재조정
+  window.addEventListener('resize', () => {
+    if (typeof resizeCharts === 'function') resizeCharts();
+  }, { passive: true });
 }
 
 document.addEventListener('DOMContentLoaded', initDashboard);
