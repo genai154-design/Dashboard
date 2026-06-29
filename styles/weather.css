@@ -1,0 +1,809 @@
+/* 전국 날씨 페이지 — 대시보드와 톤을 맞춘 다크 테마 */
+:root {
+  --bg-primary: #0a0e14;
+  --bg-secondary: #111820;
+  --bg-card: #151c26;
+  --bg-card-hover: #1a2332;
+  --border: #243044;
+  --border-light: #2d3a50;
+  --text-primary: #e8edf4;
+  --text-secondary: #8b9cb3;
+  --text-muted: #5c6d85;
+  --accent: #4a9eff;
+  --accent-bright: #7eb8ff;
+  --accent-dim: rgba(74, 158, 255, 0.15);
+  --warm: #e8a838;
+  --cold: #6ec9e8;
+  --danger: #e05252;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --transition: 0.2s ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 하늘 그라데이션 배경 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(74, 158, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(110, 201, 232, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.weather-app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 자동 갱신 타이머 바 ── */
+.auto-refresh-bar {
+  margin-bottom: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  transition: border-color var(--transition);
+}
+
+.auto-refresh-bar.is-refreshing {
+  border-color: var(--accent);
+}
+
+.auto-refresh-bar.is-refreshing .auto-refresh-bar__dot {
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74, 158, 255, 0.5); }
+  50% { opacity: 0.7; box-shadow: 0 0 8px 2px rgba(74, 158, 255, 0.4); }
+}
+
+.auto-refresh-bar__inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.auto-refresh-bar__label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.auto-refresh-bar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-bright);
+  flex-shrink: 0;
+}
+
+.auto-refresh-bar__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.auto-refresh-bar__interval {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.auto-refresh-bar__track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 80px;
+}
+
+.auto-refresh-bar__progress {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-bright));
+  border-radius: 3px;
+  transition: width 1s linear;
+}
+
+.auto-refresh-bar__timer-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.auto-refresh-bar__timer-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  margin-right: 4px;
+}
+
+.auto-refresh-bar__timer {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent-bright);
+  line-height: 1;
+  min-width: 28px;
+  text-align: center;
+}
+
+.auto-refresh-bar__timer-unit {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ── 헤더 ── */
+.weather-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.weather-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.back-link:hover {
+  color: var(--accent-bright);
+}
+
+.weather-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.weather-header__desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.weather-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.update-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.btn-refresh svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-refresh:hover {
+  background: var(--accent-bright);
+}
+
+.btn-refresh.spinning svg {
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 상태 패널 ── */
+.status-panel {
+  margin-bottom: 24px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.error-panel {
+  padding: 24px;
+  background: rgba(224, 82, 82, 0.08);
+  border: 1px solid rgba(224, 82, 82, 0.3);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.error-panel p {
+  color: var(--danger);
+  margin-bottom: 12px;
+}
+
+.btn-retry {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 8px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+
+.btn-retry:hover {
+  border-color: var(--accent);
+  color: var(--accent-bright);
+}
+
+/* ── 전국 요약 ── */
+.summary-section {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.summary-card--hot {
+  border-color: rgba(232, 168, 56, 0.3);
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(232, 168, 56, 0.06) 100%);
+}
+
+.summary-card--cold {
+  border-color: rgba(110, 201, 232, 0.3);
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(110, 201, 232, 0.06) 100%);
+}
+
+.summary-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.summary-value {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.summary-city {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Leaflet 전국 날씨 지도 ── */
+.map-section {
+  margin-bottom: 28px;
+}
+
+.weather-map {
+  height: 480px;
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  z-index: 1;
+}
+
+/* Leaflet 기본 스타일 보정 */
+.weather-map .leaflet-control-attribution {
+  background: rgba(10, 14, 20, 0.85) !important;
+  color: var(--text-muted) !important;
+  font-size: 10px !important;
+  border-radius: 4px;
+  padding: 2px 6px !important;
+}
+
+.weather-map .leaflet-control-attribution a {
+  color: var(--accent-bright) !important;
+}
+
+.weather-map .leaflet-control-zoom {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  overflow: hidden;
+}
+
+.weather-map .leaflet-control-zoom a {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border) !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+}
+
+.weather-map .leaflet-control-zoom a:hover {
+  background: var(--bg-card-hover) !important;
+}
+
+/* 커스텀 날씨 마커 */
+.weather-marker-icon {
+  background: none !important;
+  border: none !important;
+}
+
+.weather-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-light);
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.weather-marker:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+}
+
+.weather-marker--clear { border-color: rgba(232, 168, 56, 0.6); }
+.weather-marker--rain { border-color: rgba(74, 158, 255, 0.6); }
+.weather-marker--snow { border-color: rgba(110, 201, 232, 0.6); }
+.weather-marker--storm { border-color: rgba(168, 130, 255, 0.6); }
+.weather-marker--fog { border-color: rgba(139, 156, 179, 0.6); }
+.weather-marker--cloudy { border-color: rgba(139, 156, 179, 0.5); }
+
+.weather-marker__emoji {
+  font-size: 20px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.weather-marker__temp {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* 팝업 스타일 */
+.weather-popup .leaflet-popup-content-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  color: var(--text-primary);
+  padding: 0;
+}
+
+.weather-popup .leaflet-popup-content {
+  margin: 0;
+  min-width: 160px;
+}
+
+.weather-popup .leaflet-popup-tip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.map-popup {
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.map-popup__city {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.map-popup__hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.map-popup__emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.map-popup__temp {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.map-popup__temp small {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.map-popup__condition {
+  font-size: 13px;
+  color: var(--accent-bright);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.map-popup__wind {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ── 도시별 날씨 카드 ── */
+.weather-section {
+  margin-top: 8px;
+}
+
+.section-heading {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  letter-spacing: 0.02em;
+}
+
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.city-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.city-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* 날씨 상태별 카드 배경 틴트 */
+.city-card--clear {
+  background: linear-gradient(160deg, rgba(232, 168, 56, 0.1) 0%, var(--bg-card) 55%);
+}
+
+.city-card--cloudy {
+  background: linear-gradient(160deg, rgba(139, 156, 179, 0.12) 0%, var(--bg-card) 55%);
+}
+
+.city-card--rain {
+  background: linear-gradient(160deg, rgba(74, 158, 255, 0.12) 0%, var(--bg-card) 55%);
+}
+
+.city-card--snow {
+  background: linear-gradient(160deg, rgba(110, 201, 232, 0.14) 0%, var(--bg-card) 55%);
+}
+
+.city-card--storm {
+  background: linear-gradient(160deg, rgba(168, 130, 255, 0.12) 0%, var(--bg-card) 55%);
+}
+
+.city-card--fog {
+  background: linear-gradient(160deg, rgba(92, 109, 133, 0.15) 0%, var(--bg-card) 55%);
+}
+
+.city-card__header {
+  margin-bottom: 4px;
+}
+
+.city-card__name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* 이모지 + 기온 메인 영역 */
+.city-card__hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 12px;
+}
+
+.city-card__emoji-wrap {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.city-card__emoji {
+  font-size: 40px;
+  line-height: 1;
+  display: block;
+  animation: emoji-float 3s ease-in-out infinite;
+}
+
+@keyframes emoji-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.city-card__temp-block {
+  display: flex;
+  align-items: flex-start;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.city-card__temp {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+}
+
+.city-card__unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  margin-left: 2px;
+}
+
+/* 날씨 상태 뱃지 */
+.city-card__condition {
+  margin-bottom: 14px;
+}
+
+.city-card__condition-badge {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.city-card--clear .city-card__condition-badge {
+  background: rgba(232, 168, 56, 0.15);
+  border-color: rgba(232, 168, 56, 0.35);
+  color: #f0c060;
+}
+
+.city-card--rain .city-card__condition-badge {
+  background: rgba(74, 158, 255, 0.15);
+  border-color: rgba(74, 158, 255, 0.35);
+  color: var(--accent-bright);
+}
+
+.city-card--snow .city-card__condition-badge {
+  background: rgba(110, 201, 232, 0.15);
+  border-color: rgba(110, 201, 232, 0.35);
+  color: #a8e6f5;
+}
+
+.city-card--storm .city-card__condition-badge {
+  background: rgba(168, 130, 255, 0.15);
+  border-color: rgba(168, 130, 255, 0.35);
+  color: #c4a8ff;
+}
+
+/* 풍속 푸터 */
+.city-card__footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.city-card__stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.city-card__stat-emoji {
+  font-size: 22px;
+  line-height: 1;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.city-card__stat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.city-card__stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.city-card__stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.city-card__stat-value small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ── 푸터 ── */
+.weather-footer {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.weather-footer a {
+  color: var(--accent-bright);
+  text-decoration: none;
+}
+
+.weather-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 900px) {
+  .summary-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .weather-app {
+    padding: 20px 16px 32px;
+  }
+
+  .auto-refresh-bar__inner {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .auto-refresh-bar__track {
+    order: 3;
+    width: 100%;
+  }
+
+  .weather-header {
+    flex-direction: column;
+  }
+
+  .summary-section {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .weather-map {
+    height: 360px;
+  }
+
+  .weather-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .weather-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .city-card__temp {
+    font-size: 44px;
+  }
+
+  .city-card__emoji {
+    font-size: 34px;
+  }
+}

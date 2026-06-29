@@ -1,0 +1,20 @@
+# 의존성
+node_modules/
+
+# API 키 및 비밀 — 절대 커밋하지 않음
+.env
+.env.local
+.env.*.local
+secrets/*
+!secrets/.gitkeep
+
+# 로그·OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# 로컬 에디터
+.idea/
+.vscode/
+*.swp

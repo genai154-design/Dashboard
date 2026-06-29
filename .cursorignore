@@ -1,0 +1,7 @@
+﻿# Cursor가 읽지 않도록 — API 키·비밀 파일
+.env
+.env.*
+!.env.example
+secrets/
+**/secrets/**
+node_modules/

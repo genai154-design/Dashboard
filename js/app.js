@@ -1,0 +1,317 @@
+/**
+ * 방산 동향 대시보드 — UI 렌더링 및 인터랙션
+ */
+
+/** HTML 속성값 이스케이프 — 퀵 검색 버튼 data 속성용 */
+function escapeHtmlAttr(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;');
+}
+
+/** 인사이트 카드(뉴스·입찰·환율·AI) 렌더링 */
+function renderInsightCards() {
+  const grid = document.getElementById('insight-grid');
+  const { bidding, exchange, aiAnalysis } = DEFENSE_DATA.insightCards;
+
+  grid.innerHTML = `
+    <!-- 뉴스 카드 — Tavily 실시간 검색 -->
+    <article class="insight-card insight-card--news" id="news-insight-card">
+      <div class="insight-card__header">
+        <div class="insight-card__title-wrap">
+          <div class="insight-card__icon insight-card__icon--news">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/></svg>
+          </div>
+          <h3 class="insight-card__title">뉴스</h3>
+        </div>
+        <span class="insight-card__badge insight-card__badge--count" id="news-count-badge">—</span>
+      </div>
+
+      <form class="insight-news-search" id="news-search-form" aria-label="방산 뉴스 검색">
+        <input
+          type="search"
+          id="news-search-input"
+          class="insight-news-search__input"
+          placeholder="방산 뉴스 검색…"
+          autocomplete="off"
+          aria-label="뉴스 검색어"
+        />
+        <button type="submit" class="insight-news-search__btn" aria-label="검색">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+      </form>
+
+      <div class="insight-news-chips" role="group" aria-label="빠른 검색">
+        ${(DEFENSE_DATA.tavilyNews?.quickTopics || []).map((t) => `
+          <button type="button" class="insight-news-chip" data-news-query="${escapeHtmlAttr(t.query)}">${t.label}</button>
+        `).join('')}
+      </div>
+
+      <div class="insight-card__body" id="news-search-results">
+        <div class="insight-news-loading">
+          <div class="insight-news-loading__spinner" aria-hidden="true"></div>
+          <span>뉴스 불러오는 중…</span>
+        </div>
+      </div>
+
+      <div class="insight-card__footer">
+        <a href="#news" class="insight-card__link">전체 뉴스 보기 →</a>
+        <span class="insight-card__source">Tavily</span>
+      </div>
+    </article>
+
+    <!-- 입찰 카드 -->
+    <article class="insight-card insight-card--bid">
+      <div class="insight-card__header">
+        <div class="insight-card__title-wrap">
+          <div class="insight-card__icon insight-card__icon--bid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h3 class="insight-card__title">입찰</h3>
+        </div>
+        <span class="insight-card__badge insight-card__badge--count">진행 ${bidding.activeCount}건</span>
+      </div>
+      <div class="insight-card__body">
+        <div class="insight-bid-summary">
+          <span class="insight-bid-summary__label">총 사업 규모</span>
+          <span class="insight-bid-summary__value">${bidding.totalAmount}</span>
+        </div>
+        ${bidding.items.map((item) => `
+          <div class="insight-bid-item">
+            <div class="insight-bid-item__row">
+              <span class="insight-bid-item__title">${item.title}</span>
+              <span class="insight-bid-item__deadline">${item.deadline}</span>
+            </div>
+            <div class="insight-bid-item__meta">
+              <span>${item.agency}</span>
+              <span>${item.amount}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </article>
+
+    <!-- 환율 카드 -->
+    <article class="insight-card insight-card--fx">
+      <div class="insight-card__header">
+        <div class="insight-card__title-wrap">
+          <div class="insight-card__icon insight-card__icon--fx">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a2.5 2.5 0 0 1 0 5H9M15 15H10.5a2.5 2.5 0 0 1 0-5H15"/></svg>
+          </div>
+          <h3 class="insight-card__title">환율</h3>
+        </div>
+        <span class="insight-card__badge insight-card__badge--count">${exchange.baseDate}</span>
+      </div>
+      <div class="insight-card__body">
+        ${exchange.rates.map((rate) => `
+          <div class="insight-fx-row">
+            <span class="insight-fx-pair">${rate.pair}</span>
+            <span class="insight-fx-value">${rate.value}</span>
+            <span class="insight-fx-change insight-fx-change--${rate.direction === 'up' ? 'up' : 'down'}">
+              ${rate.direction === 'up' ? '▲' : '▼'} ${rate.change}
+            </span>
+          </div>
+        `).join('')}
+        <p class="insight-fx-note">${exchange.note}</p>
+      </div>
+    </article>
+
+    <!-- AI 분석 카드 -->
+    <article class="insight-card insight-card--ai">
+      <div class="insight-card__header">
+        <div class="insight-card__title-wrap">
+          <div class="insight-card__icon insight-card__icon--ai">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a4 4 0 0 0-4 4v1H6a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h1v1a4 4 0 0 0 8 0v-1h1a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/></svg>
+          </div>
+          <h3 class="insight-card__title">AI 분석</h3>
+        </div>
+        <span class="insight-card__badge insight-card__badge--ai">AI 생성</span>
+      </div>
+      <div class="insight-card__body">
+        <div class="insight-ai-sentiment">
+          <span class="insight-ai-score">${aiAnalysis.sentimentScore}</span>
+          <span class="insight-ai-sentiment-label ${aiAnalysis.sentimentScore < 60 ? 'insight-ai-sentiment-label--neutral' : ''}">
+            ${aiAnalysis.sentiment} 전망
+          </span>
+        </div>
+        <p class="insight-ai-summary">${aiAnalysis.summary}</p>
+        ${aiAnalysis.highlights.map((h) => `
+          <div class="insight-ai-highlight">
+            <span class="insight-ai-highlight__tag insight-ai-highlight__tag--${h.type}">
+              ${h.type === 'opportunity' ? '기회' : h.type === 'risk' ? '리스크' : '주목'}
+            </span>
+            <span>${h.text}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="insight-card__footer">
+        <span class="insight-ai-updated">마지막 분석: ${aiAnalysis.updatedAt}</span>
+      </div>
+    </article>
+  `;
+}
+
+/** KPI 카드 렌더링 */
+function renderKPIs(year) {
+  const grid = document.getElementById('kpi-grid');
+  const items = DEFENSE_DATA.kpi[year] || DEFENSE_DATA.kpi['2026'];
+
+  grid.innerHTML = items.map((item) => `
+    <article class="kpi-card">
+      <div class="kpi-icon ${KPI_ICON_CLASS[item.icon] || 'kpi-icon--green'}">
+        ${KPI_ICONS[item.icon] || ''}
+      </div>
+      <div class="kpi-label">${item.label}</div>
+      <div class="kpi-value">${item.value}</div>
+      <div class="kpi-change ${item.direction}">
+        ${item.direction === 'positive' ? '▲' : item.direction === 'negative' ? '▼' : '—'}
+        ${item.change} vs 전년
+      </div>
+    </article>
+  `).join('');
+}
+
+/** 지역 동향 카드 렌더링 */
+function renderRegions() {
+  const grid = document.getElementById('region-grid');
+
+  grid.innerHTML = DEFENSE_DATA.regions.map((region) => `
+    <article class="region-card">
+      <div class="region-header">
+        <span class="region-name">${region.name}</span>
+        <span class="region-status region-status--${region.status}">${region.statusLabel}</span>
+      </div>
+      <div class="region-budget">${region.budget}</div>
+      <div class="region-trend">${region.trend}</div>
+      <div class="region-tags">
+        ${region.tags.map((tag) => `<span class="region-tag">${tag}</span>`).join('')}
+      </div>
+    </article>
+  `).join('');
+}
+
+/** 기술 트렌드 카드 렌더링 */
+function renderTechnologies() {
+  const grid = document.getElementById('tech-grid');
+
+  grid.innerHTML = DEFENSE_DATA.technologies.map((tech) => `
+    <article class="tech-card">
+      <div class="tech-rank">${tech.rank}</div>
+      <h3 class="tech-name">${tech.name}</h3>
+      <p class="tech-desc">${tech.desc}</p>
+      <div class="tech-progress">
+        <div class="tech-progress-label">
+          <span>도입률</span>
+          <span>${tech.adoption}%</span>
+        </div>
+        <div class="tech-progress-bar">
+          <div class="tech-progress-fill" style="width: ${tech.adoption}%"></div>
+        </div>
+      </div>
+      <div class="tech-progress">
+        <div class="tech-progress-label">
+          <span>투자 증가</span>
+          <span>${tech.investment}%</span>
+        </div>
+        <div class="tech-progress-bar">
+          <div class="tech-progress-fill" style="width: ${tech.investment}%; background: linear-gradient(90deg, #4a9eff, #7eb8ff)"></div>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+
+/** 마지막 업데이트 시각 표시 */
+function updateTimestamp() {
+  const el = document.getElementById('last-updated');
+  const now = new Date();
+  el.textContent = now.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+/** 사이드바 네비게이션 — 스크롤 위치에 따라 active 상태 갱신 */
+function initNavigation() {
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = Array.from(navItems).map((item) =>
+    document.getElementById(item.getAttribute('href').slice(1))
+  );
+
+  function onScroll() {
+    const scrollY = window.scrollY + 120;
+
+    sections.forEach((section, i) => {
+      if (!section) return;
+      const top = section.offsetTop;
+      const bottom = top + section.offsetHeight;
+
+      if (scrollY >= top && scrollY < bottom) {
+        navItems.forEach((n) => n.classList.remove('active'));
+        navItems[i].classList.add('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  navItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      navItems.forEach((n) => n.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+}
+
+/** 연도 필터 변경 */
+function initYearFilter() {
+  const select = document.getElementById('year-filter');
+
+  select.addEventListener('change', () => {
+    renderKPIs(select.value);
+  });
+}
+
+/** 새로고침 버튼 — KPI·타임스탬프 갱신 및 시각적 피드백 */
+function initRefresh() {
+  const btn = document.getElementById('btn-refresh');
+  const select = document.getElementById('year-filter');
+
+  btn.addEventListener('click', () => {
+    btn.classList.add('spinning');
+    btn.disabled = true;
+
+  // 짧은 지연으로 새로고침 UX 제공 (실제 API 연동 시 fetch로 교체)
+    setTimeout(() => {
+      renderKPIs(select.value);
+      renderInsightCards();
+      initNewsSearch();
+      updateTimestamp();
+      resizeCharts();
+      btn.classList.remove('spinning');
+      btn.disabled = false;
+    }, 600);
+  });
+}
+
+/** 대시보드 초기화 */
+function initDashboard() {
+  const year = document.getElementById('year-filter').value;
+
+  renderKPIs(year);
+  renderInsightCards();
+  initNewsSearch();
+  renderRegions();
+  renderTechnologies();
+  updateTimestamp();
+  initCharts();
+  initNavigation();
+  initYearFilter();
+  initRefresh();
+}
+
+document.addEventListener('DOMContentLoaded', initDashboard);
