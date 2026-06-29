@@ -9,6 +9,9 @@
     },
     "api/naver/search.js": {
       "maxDuration": 15
+    },
+    "api/gemini/analyze.js": {
+      "maxDuration": 30
     }
   }
 }

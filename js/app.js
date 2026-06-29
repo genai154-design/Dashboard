@@ -13,7 +13,7 @@ function escapeHtmlAttr(str) {
 /** 인사이트 카드(뉴스·입찰·환율·AI) 렌더링 */
 function renderInsightCards() {
   const grid = document.getElementById('insight-grid');
-  const { bidding, aiAnalysis } = DEFENSE_DATA.insightCards;
+  const { bidding } = DEFENSE_DATA.insightCards;
 
   grid.innerHTML = `
     <!-- 뉴스 검색 — 국외(Tavily) · 국내(Naver) 이중 패널 -->
@@ -164,8 +164,8 @@ function renderInsightCards() {
       </div>
     </article>
 
-    <!-- AI 분석 카드 -->
-    <article class="insight-card insight-card--ai">
+    <!-- AI 분석 카드 — Gemini 2.5 Flash Lite -->
+    <article class="insight-card insight-card--ai" id="ai-insight-card">
       <div class="insight-card__header">
         <div class="insight-card__title-wrap">
           <div class="insight-card__icon insight-card__icon--ai">
@@ -173,27 +173,22 @@ function renderInsightCards() {
           </div>
           <h3 class="insight-card__title">AI 분석</h3>
         </div>
-        <span class="insight-card__badge insight-card__badge--ai">AI 생성</span>
-      </div>
-      <div class="insight-card__body">
-        <div class="insight-ai-sentiment">
-          <span class="insight-ai-score">${aiAnalysis.sentimentScore}</span>
-          <span class="insight-ai-sentiment-label ${aiAnalysis.sentimentScore < 60 ? 'insight-ai-sentiment-label--neutral' : ''}">
-            ${aiAnalysis.sentiment} 전망
-          </span>
+        <div class="insight-card__header-actions">
+          <span class="insight-card__badge insight-card__badge--ai" id="ai-status-badge">Gemini</span>
+          <button type="button" class="insight-ai-refresh" id="ai-refresh-btn" aria-label="AI 분석 새로고침">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
         </div>
-        <p class="insight-ai-summary">${aiAnalysis.summary}</p>
-        ${aiAnalysis.highlights.map((h) => `
-          <div class="insight-ai-highlight">
-            <span class="insight-ai-highlight__tag insight-ai-highlight__tag--${h.type}">
-              ${h.type === 'opportunity' ? '기회' : h.type === 'risk' ? '리스크' : '주목'}
-            </span>
-            <span>${h.text}</span>
-          </div>
-        `).join('')}
+      </div>
+      <div class="insight-card__body" id="ai-analysis-body">
+        <div class="insight-ai-loading">
+          <div class="insight-news-loading__spinner insight-news-loading__spinner--ai" aria-hidden="true"></div>
+          <span>뉴스 검색 후 AI 분석을 시작합니다…</span>
+        </div>
       </div>
       <div class="insight-card__footer">
-        <span class="insight-ai-updated">마지막 분석: ${aiAnalysis.updatedAt}</span>
+        <span class="insight-ai-updated" id="ai-updated-at">분석 대기 중</span>
+        <span class="insight-card__source">Gemini 2.5 Flash Lite</span>
       </div>
     </article>
   `;
@@ -343,6 +338,7 @@ function initRefresh() {
       renderInsightCards();
       initNewsSearch();
       initExchangeRates();
+      initGeminiAnalysis();
       updateTimestamp();
       resizeCharts();
       btn.classList.remove('spinning');
@@ -359,6 +355,7 @@ function initDashboard() {
   renderInsightCards();
   initNewsSearch();
   initExchangeRates();
+  initGeminiAnalysis();
   renderRegions();
   renderTechnologies();
   updateTimestamp();

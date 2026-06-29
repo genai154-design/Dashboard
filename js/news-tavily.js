@@ -4,6 +4,22 @@
  */
 
 let lastTavilyQuery = '';
+let lastTavilyResults = [];
+
+function notifyNewsUpdated() {
+  document.dispatchEvent(new CustomEvent('news-search-updated'));
+}
+
+function getLastTavilyResults() {
+  return lastTavilyResults;
+}
+
+function getLastTavilyQuery() {
+  return lastTavilyQuery;
+}
+
+window.getLastTavilyResults = getLastTavilyResults;
+window.getLastTavilyQuery = getLastTavilyQuery;
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -132,8 +148,10 @@ async function searchTavilyNews(query) {
     });
 
     const results = data.results || [];
+    lastTavilyResults = results;
     renderTavilyPanelResults(results, trimmed);
     renderTavilyFullList(results, trimmed);
+    notifyNewsUpdated();
   } catch (err) {
     setTavilyPanelState('error', err.message || '국외 뉴스 검색에 실패했습니다.');
   }

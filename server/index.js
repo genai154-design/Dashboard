@@ -5,10 +5,11 @@
  */
 const express = require('express');
 const path = require('path');
-const { rootDir, port, hasTavilyApiKey, hasExchangeRateApiKey, hasNaverCredentials } = require('../api/_lib/env');
+const { rootDir, port, hasTavilyApiKey, hasExchangeRateApiKey, hasNaverCredentials, hasGeminiApiKey } = require('../api/_lib/env');
 const tavilyRouter = require('./routes/tavily');
 const exchangeRouter = require('./routes/exchange');
 const naverRouter = require('./routes/naver');
+const geminiRouter = require('./routes/gemini');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use((req, res, next) => {
 app.use('/api/tavily', tavilyRouter);
 app.use('/api/exchange', exchangeRouter);
 app.use('/api/naver', naverRouter);
+app.use('/api/gemini', geminiRouter);
 
 // dotfiles(.env 등) 정적 제공 금지
 app.use(
@@ -67,5 +69,11 @@ app.listen(port, () => {
     console.warn(
       '  [경고] NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 미설정 — 국내 뉴스 검색 불가'
     );
+  }
+
+  if (hasGeminiApiKey()) {
+    console.log('  Gemini API: POST /api/gemini/analyze (gemini-2.5-flash-lite)');
+  } else {
+    console.warn('  [경고] GEMINI_API_KEY 미설정 — AI 분석 불가');
   }
 });

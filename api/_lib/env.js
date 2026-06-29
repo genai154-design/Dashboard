@@ -53,6 +53,21 @@ function hasNaverCredentials() {
   );
 }
 
+/** Google AI Studio Gemini API 키 */
+function getGeminiApiKey() {
+  const key = process.env.GEMINI_API_KEY?.trim();
+  if (!key) {
+    throw new Error(
+      'GEMINI_API_KEY가 설정되지 않았습니다. .env 또는 Vercel 환경 변수를 확인하세요.'
+    );
+  }
+  return key;
+}
+
+function hasGeminiApiKey() {
+  return Boolean(process.env.GEMINI_API_KEY?.trim());
+}
+
 module.exports = {
   rootDir,
   port: Number(process.env.PORT) || 3000,
@@ -62,4 +77,6 @@ module.exports = {
   hasExchangeRateApiKey,
   getNaverCredentials,
   hasNaverCredentials,
+  getGeminiApiKey,
+  hasGeminiApiKey,
 };

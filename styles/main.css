@@ -1035,6 +1035,78 @@ body::before {
   color: var(--warning);
 }
 
+.insight-ai-sentiment-label--negative {
+  background: rgba(224, 82, 82, 0.15);
+  color: var(--danger);
+}
+
+.insight-ai-loading,
+.insight-ai-waiting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.insight-ai-waiting {
+  padding: 8px 0;
+  line-height: 1.5;
+}
+
+.insight-news-loading__spinner--ai {
+  border-top-color: #a882ff;
+}
+
+.insight-ai-error {
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.insight-ai-error__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.insight-ai-error__hint code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.insight-ai-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.insight-ai-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.insight-ai-refresh:hover {
+  border-color: #a882ff;
+  color: #a882ff;
+}
+
+.insight-card--ai.is-loading .insight-ai-refresh {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .insight-ai-summary {
   font-size: 12px;
   color: var(--text-secondary);
