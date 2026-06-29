@@ -114,7 +114,7 @@ function setNewsCardState(state, message = '') {
     container.innerHTML = `
       <div class="insight-news-error">
         <p>${escapeHtml(message)}</p>
-        <p class="insight-news-error__hint">서버 실행: <code>npm start</code> 후 접속하세요.</p>
+        <p class="insight-news-error__hint">로컬: <code>npm start</code> · Vercel: <code>npm run dev:vercel</code></p>
       </div>
     `;
     if (badge) badge.textContent = '오류';

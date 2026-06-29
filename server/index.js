@@ -1,11 +1,11 @@
 /**
- * 로컬·배포용 서버
+ * 로컬 개발용 Express 서버
  * - 정적 파일(대시보드·날씨 페이지) 제공
- * - Tavily API는 /api/tavily/* 프록시로만 호출 (키는 process.env)
+ * - Tavily API: /api/tavily/search (Vercel 배포 시 Serverless Function 사용)
  */
 const express = require('express');
 const path = require('path');
-const { rootDir, port, hasTavilyApiKey } = require('./lib/env');
+const { rootDir, port, hasTavilyApiKey } = require('../api/_lib/env');
 const tavilyRouter = require('./routes/tavily');
 
 const app = express();
@@ -16,6 +16,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use((req, res, next) => {
   const blocked =
     req.path.startsWith('/server') ||
+    req.path.startsWith('/api/_lib') ||
     req.path.startsWith('/node_modules') ||
     req.path.startsWith('/secrets') ||
     req.path === '/.env' ||
@@ -47,6 +48,7 @@ app.listen(port, () => {
       '  [경고] TAVILY_API_KEY 미설정 — .env.example을 참고하여 .env를 만드세요.'
     );
   } else {
-    console.log('  Tavily API: /api/tavily/search (키는 서버에서만 사용)');
+    console.log('  Tavily API: POST /api/tavily/search (로컬 Express 프록시)');
+    console.log('  Vercel 배포: api/tavily/search.js Serverless Function');
   }
 });

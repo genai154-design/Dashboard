@@ -1,6 +1,9 @@
 # 의존성
 node_modules/
 
+# Vercel 로컬 링크
+.vercel
+
 # API 키 및 비밀 — 절대 커밋하지 않음
 .env
 .env.local

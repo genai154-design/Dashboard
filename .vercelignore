@@ -1,0 +1,6 @@
+# Vercel 배포 시 제외 — 로컬 Express 서버 소스는 Serverless Function으로 대체
+server/
+secrets/
+.env
+.env.*
+!.env.example
