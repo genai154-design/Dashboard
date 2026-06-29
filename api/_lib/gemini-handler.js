@@ -1,9 +1,21 @@
 /**
  * Gemini API — 뉴스 검색 결과 요약·분석 공통 핸들러
- * 모델: gemini-2.5-flash-lite
+ * 모델: .env GEMINI_MODEL (기본 gemini-2.5-flash-lite)
+ * 프롬프트: prompt/news-analysis.md
  */
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const {
+  buildPromptFromFile,
+  NEWS_ANALYSIS_PROMPT_FILE,
+} = require('./prompt-loader');
+const { getGeminiModel } = require('./env');
+
+const GEMINI_API_BASE =
+  'https://generativelanguage.googleapis.com/v1beta/models';
+
+/** 모델 ID로 generateContent URL 생성 */
+function buildGeminiUrl(model) {
+  return `${GEMINI_API_BASE}/${model}:generateContent`;
+}
 
 const RESPONSE_SCHEMA = {
   type: 'object',
@@ -70,27 +82,21 @@ function buildNewsDigest(globalNews, domesticNews) {
   return sections.join('\n');
 }
 
+/** prompt/news-analysis.md 템플릿 + 뉴스 데이터로 최종 프롬프트 구성 */
 function buildPrompt(digest, globalQuery, domesticQuery) {
-  return `당신은 방위산업·국방 분야 전문 애널리스트입니다.
-아래 뉴스 검색 결과를 바탕으로 방산 업계 동향을 분석하고 한국어로 답변하세요.
-
-국외 검색어: ${globalQuery || '없음'}
-국내 검색어: ${domesticQuery || '없음'}
-
-${digest}
-
-분석 지침:
-- sentiment: "긍정", "중립", "부정" 중 하나 (K-방산·국방 산업 관점)
-- sentimentScore: 0~100 (높을수록 긍정적 전망)
-- summary: 핵심 동향 2~3문장
-- highlights: 3~4개 (type은 opportunity=기회, risk=리스크, watch=주목)`;
+  return buildPromptFromFile(NEWS_ANALYSIS_PROMPT_FILE, {
+    globalQuery: globalQuery || '없음',
+    domesticQuery: domesticQuery || '없음',
+    newsDigest: digest,
+  });
 }
 
 /**
  * @param {object} body - { globalNews?, domesticNews?, globalQuery?, domesticQuery? }
  * @param {() => string} getApiKey
+ * @param {() => string} [getModel] - 모델 ID (기본: env GEMINI_MODEL)
  */
-async function handleGeminiNewsAnalysis(body, getApiKey) {
+async function handleGeminiNewsAnalysis(body, getApiKey, getModel = getGeminiModel) {
   const globalRaw = Array.isArray(body?.globalNews) ? body.globalNews : [];
   const domesticRaw = Array.isArray(body?.domesticNews) ? body.domesticNews : [];
 
@@ -112,6 +118,7 @@ async function handleGeminiNewsAnalysis(body, getApiKey) {
 
   try {
     const apiKey = getApiKey();
+    const model = getModel();
     const digest = buildNewsDigest(globalNews, domesticNews);
     const prompt = buildPrompt(
       digest,
@@ -119,7 +126,7 @@ async function handleGeminiNewsAnalysis(body, getApiKey) {
       body?.domesticQuery
     );
 
-    const response = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+    const response = await fetch(`${buildGeminiUrl(model)}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -177,7 +184,7 @@ async function handleGeminiNewsAnalysis(body, getApiKey) {
         ),
         summary: analysis.summary || '',
         highlights,
-        model: GEMINI_MODEL,
+        model,
         analyzedAt: new Date().toISOString(),
         newsCount: {
           global: globalNews.length,
@@ -192,4 +199,4 @@ async function handleGeminiNewsAnalysis(body, getApiKey) {
   }
 }
 
-module.exports = { handleGeminiNewsAnalysis, GEMINI_MODEL };
+module.exports = { handleGeminiNewsAnalysis, buildGeminiUrl };

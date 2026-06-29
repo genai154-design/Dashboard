@@ -164,7 +164,7 @@ function renderInsightCards() {
       </div>
     </article>
 
-    <!-- AI 분석 카드 — Gemini 2.5 Flash Lite -->
+    <!-- AI 분석 카드 — Gemini -->
     <article class="insight-card insight-card--ai" id="ai-insight-card">
       <div class="insight-card__header">
         <div class="insight-card__title-wrap">
@@ -188,7 +188,7 @@ function renderInsightCards() {
       </div>
       <div class="insight-card__footer">
         <span class="insight-ai-updated" id="ai-updated-at">분석 대기 중</span>
-        <span class="insight-card__source">Gemini 2.5 Flash Lite</span>
+        <span class="insight-card__source" id="ai-model-label">Gemini</span>
       </div>
     </article>
   `;

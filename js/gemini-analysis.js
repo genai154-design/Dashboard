@@ -1,6 +1,6 @@
 /**
  * Gemini AI 분석 — Tavily·Naver 뉴스 검색 결과 요약·분석
- * 모델: gemini-2.5-flash-lite
+ * 모델: .env GEMINI_MODEL (기본 gemini-2.5-flash-lite)
  */
 
 let analysisDebounceTimer = null;
@@ -138,6 +138,11 @@ function renderAiAnalysis(data) {
   if (badge) badge.textContent = 'Gemini';
   if (updated) {
     updated.textContent = `마지막 분석: ${formatAnalyzedAt(data.analyzedAt)}`;
+  }
+
+  const modelLabel = document.getElementById('ai-model-label');
+  if (modelLabel && data.model) {
+    modelLabel.textContent = data.model;
   }
 }
 

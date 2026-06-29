@@ -5,7 +5,7 @@
  */
 const express = require('express');
 const path = require('path');
-const { rootDir, port, hasTavilyApiKey, hasExchangeRateApiKey, hasNaverCredentials, hasGeminiApiKey } = require('../api/_lib/env');
+const { rootDir, port, hasTavilyApiKey, hasExchangeRateApiKey, hasNaverCredentials, hasGeminiApiKey, getGeminiModel } = require('../api/_lib/env');
 const tavilyRouter = require('./routes/tavily');
 const exchangeRouter = require('./routes/exchange');
 const naverRouter = require('./routes/naver');
@@ -72,7 +72,7 @@ app.listen(port, () => {
   }
 
   if (hasGeminiApiKey()) {
-    console.log('  Gemini API: POST /api/gemini/analyze (gemini-2.5-flash-lite)');
+    console.log(`  Gemini API: POST /api/gemini/analyze (${getGeminiModel()})`);
   } else {
     console.warn('  [경고] GEMINI_API_KEY 미설정 — AI 분석 불가');
   }

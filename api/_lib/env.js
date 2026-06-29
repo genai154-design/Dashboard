@@ -68,6 +68,14 @@ function hasGeminiApiKey() {
   return Boolean(process.env.GEMINI_API_KEY?.trim());
 }
 
+/** Gemini 모델 ID — .env GEMINI_MODEL, 미설정 시 gemini-2.5-flash-lite */
+const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash-lite';
+
+function getGeminiModel() {
+  const model = process.env.GEMINI_MODEL?.trim();
+  return model || DEFAULT_GEMINI_MODEL;
+}
+
 module.exports = {
   rootDir,
   port: Number(process.env.PORT) || 3000,
@@ -79,4 +87,6 @@ module.exports = {
   hasNaverCredentials,
   getGeminiApiKey,
   hasGeminiApiKey,
+  getGeminiModel,
+  DEFAULT_GEMINI_MODEL,
 };
